@@ -11,15 +11,15 @@ using namespace std;
 // Returns whether there is an augmenting path.
 bool augmenting_path(Vertex* s, Vertex* t, unordered_set<Vertex*> V, vector<Vertex*> &P)
 {
-        // Check that s and t aren't nullptr
-        if (s == nullptr || t == nullptr)
+	// Check that s and t aren't nullptr
+	if (s == nullptr || t == nullptr)
 	{
 		cerr << "augmenting_path() was passed nullptr s or t." << endl;
 		abort();
 	}
 
-        // Check that s and t are in the graph
-        if (V.find(s) == V.end() || V.find(t) == V.end())
+	// Check that s and t are in the graph
+	if (V.find(s) == V.end() || V.find(t) == V.end())
 	{
 		cerr << "augmenting_path() was passed s or t not in V." << endl;
 		abort();
@@ -34,13 +34,13 @@ bool augmenting_path(Vertex* s, Vertex* t, unordered_set<Vertex*> V, vector<Vert
 				abort();
 			}
 
-        // Since augmenting paths should have the fewest edges,
-	// not the minimum weight, run BFS.
+	// Since augmenting paths should have the fewest edges,
+// not the minimum weight, run BFS.
 	queue<Vertex*> Q;
 	Q.push(s);
 
 	unordered_set<Vertex*> R;
-	R.clear(); 
+	R.clear();
 	R.insert(s);
 
 	unordered_map<Vertex*, Vertex*> prev;
@@ -60,26 +60,26 @@ bool augmenting_path(Vertex* s, Vertex* t, unordered_set<Vertex*> V, vector<Vert
 			{
 				Q.push(nei);
 				R.insert(nei);
-				prev[nei] = cur; 
+				prev[nei] = cur;
 			}
 		}
-	}      
+	}
 
-        // If BFS never reached t
-        if (R.find(t) == R.end())
-                return false;
+	// If BFS never reached t
+	if (R.find(t) == R.end())
+		return false;
 
-        // Reconstruct shortest path backwards
-        P.clear();
-        P.push_back(t);
-        while (P[P.size()-1] != s)
-                P.push_back(prev[P[P.size()-1]]);
+	// Reconstruct shortest path backwards
+	P.clear();
+	P.push_back(t);
+	while (P[P.size() - 1] != s)
+		P.push_back(prev[P[P.size() - 1]]);
 
-        // Reverse shortest path
-        for (int i = 0; i < P.size()/2; ++i)
-		swap(P[i], P[P.size()-1-i]);
+	// Reverse shortest path
+	for (int i = 0; i < P.size() / 2; ++i)
+		swap(P[i], P[P.size() - 1 - i]);
 
-        return true;
+	return true;
 }
 
 // Returns the maximum flow from s to t in a weighted graph with vertex set V.
@@ -87,17 +87,17 @@ bool augmenting_path(Vertex* s, Vertex* t, unordered_set<Vertex*> V, vector<Vert
 int max_flow(Vertex* s, Vertex* t, unordered_set<Vertex*> V)
 {
 	// If s or t is invalid.
-        if (s == nullptr || t == nullptr)
+	if (s == nullptr || t == nullptr)
 	{
 		cerr << "max_flow() was passed nullptr s or t." << endl;
-		abort(); 
+		abort();
 	}
 
 	// If s or t is not in the vertex set.
-        if (V.find(s) == V.end() || V.find(t) == V.end())
+	if (V.find(s) == V.end() || V.find(t) == V.end())
 	{
 		cerr << "max_flow() was passed s or t not in V." << endl;
-		abort(); 
+		abort();
 	}
 
 	// Check that every vertex has valid neighs/weights.
@@ -109,24 +109,24 @@ int max_flow(Vertex* s, Vertex* t, unordered_set<Vertex*> V)
 				abort();
 			}
 
-        // Create a deep copy of V to use as the residual graph
-        unordered_set<Vertex*> resV;
-        unordered_map<Vertex*, Vertex*> C; // Maps vertices in V to copies in resV
-        for (Vertex* vp : V)
-        {
-                Vertex* rp = new Vertex;
-                resV.insert(rp);
-                C[vp] = rp;
-        }
-        for (Vertex* vp : V)
-                for (Vertex* np : vp->neighs)
-                {
-                        C[vp]->neighs.insert(C[np]);
-                        C[vp]->weights[C[np]] = vp->weights[np];
-                }
+	// Create a deep copy of V to use as the residual graph
+	unordered_set<Vertex*> resV;
+	unordered_map<Vertex*, Vertex*> C; // Maps vertices in V to copies in resV
+	for (Vertex* vp : V)
+	{
+		Vertex* rp = new Vertex;
+		resV.insert(rp);
+		C[vp] = rp;
+	}
+	for (Vertex* vp : V)
+		for (Vertex* np : vp->neighs)
+		{
+			C[vp]->neighs.insert(C[np]);
+			C[vp]->weights[C[np]] = vp->weights[np];
+		}
 	// Add any missing necessary "back" edges. 
-        for (Vertex* vp : V)
-                for (Vertex* np : vp->neighs)
+	for (Vertex* vp : V)
+		for (Vertex* np : vp->neighs)
 		{
 			if (C[np]->neighs.find(C[vp]) == C[np]->neighs.end())
 			{
@@ -135,31 +135,31 @@ int max_flow(Vertex* s, Vertex* t, unordered_set<Vertex*> V)
 			}
 		}
 
-        // Run Edmonds-Karp
-        while (true)
-        {
-                // Find an augmenting path
-                vector<Vertex*> P;
-                if (!augmenting_path(C[s], C[t], resV, P))
-                        break;  
-                // Update residual graph
-                for (int i = 0; i < P.size()-1; ++i)
-                {
-                        --((*(resV.find(P[i])))->weights[P[i+1]]);
-                        ++((*(resV.find(P[i+1])))->weights[P[i]]);
-                }
-        }
+	// Run Edmonds-Karp
+	while (true)
+	{
+		// Find an augmenting path
+		vector<Vertex*> P;
+		if (!augmenting_path(C[s], C[t], resV, P))
+			break;
+		// Update residual graph
+		for (int i = 0; i < P.size() - 1; ++i)
+		{
+			--((*(resV.find(P[i])))->weights[P[i + 1]]);
+			++((*(resV.find(P[i + 1])))->weights[P[i]]);
+		}
+	}
 
-        // Compute actual flow amount
-        int flow = 0;
-        for (Vertex* snp : C[s]->neighs)
-                flow += 1 - C[s]->weights[snp];
+	// Compute actual flow amount
+	int flow = 0;
+	for (Vertex* snp : C[s]->neighs)
+		flow += 1 - C[s]->weights[snp];
 
-        // Delete residual graph
-        for (Vertex* vp : resV)
-                delete vp;
+	// Delete residual graph
+	for (Vertex* vp : resV)
+		delete vp;
 
-        return flow;
+	return flow;
 }
 
 inline size_t key(int i, int j) { return (size_t)i << 32 | (unsigned int)j; }
@@ -176,6 +176,10 @@ private:
 	unordered_map<size_t, Vertex*> redCheckers;
 	//Stores all the vertices in the graph
 	unordered_map<Vertex*, pair<int, int>> vertexDictionary;
+
+	//The vertices will be used for max flow and be computed for perfect matching
+	Vertex *source;
+	Vertex *sink;
 
 	void addNeighbors()
 	{
@@ -214,7 +218,7 @@ private:
 				i.second->neighs.insert(neighbor);
 				i.second->weights[neighbor] = 1;
 			}
-			catch(out_of_range oor1)
+			catch (out_of_range oor1)
 			{
 				dummy = "";
 			}
@@ -241,6 +245,19 @@ private:
 				dummy = "";
 			}
 		}
+
+		
+		for (auto x : blackCheckers)
+		{
+			source->neighs.insert(x); //I have the right idea but I cant get the right syntax for
+		}												//getting the starting and ending node to do max_flow
+
+		for (auto y : redCheckers)
+		{
+			redCheckers[y]->neighs.insert(sink);
+		}
+
+
 	}
 
 public:
@@ -289,8 +306,17 @@ public:
 				column++;
 			}
 		}
-		//addNeighbors();
+		addNeighbors();
 	}
+	Vertex* GetSource()
+	{
+		return source;
+	}
+	Vertex* GetSink()
+	{
+		return sink;
+	}
+
 };
 
 bool has_tiling(string floor)
@@ -364,10 +390,28 @@ bool has_tiling(string floor)
 		}
 	}
 
+	BiPartGraph CheckerBoard;
+
+	CheckerBoard.constructGraph(modFloor);
+
+	if (CheckerBoard.isValid() == false)
+	{
+		return false;
+	}
+
+	Vertex *s = CheckerBoard.GetSource();
+	Vertex *t = CheckerBoard.GetSink();
+
+	//max flow
+
+
+
+	//augmented path
+
+	
 
 	//cout << modFloor << endl;
 	//system("pause");
-    return false;
 }
 
 
