@@ -1,4 +1,5 @@
-
+#ifndef BIPARTGRAPH_H
+#define BIPARTGRAPH_H
 
 #include "tiling.h"
 #include "vertex.h"
@@ -162,7 +163,6 @@ int max_flow(Vertex* s, Vertex* t, unordered_set<Vertex*> V)
 	return flow;
 }
 
-inline size_t key(int i, int j) { return (size_t)i << 32 | (unsigned int)j; }
 
 class BiPartGraph
 {
@@ -170,16 +170,20 @@ private:
 
 	//Stores the number of vertices, used to determine the first condition in has_tiling
 	int numVertices;
+	//Stores the set with all the vertices
+	unordered_set<Vertex*> totalCheckers;
 	//Stores the set of black checkers in the bipartite graph
-	unordered_map<size_t, Vertex*> blackCheckers;
+	unordered_set<Vertex*> blackCheckers;
 	//Stores the set of red checkers in the bipartite graph
-	unordered_map<size_t, Vertex*> redCheckers;
-	//Stores all the vertices in the graph
+	unordered_set<Vertex*> redCheckers;
+	//Stores all the vertices in the graph with their coordinates
 	unordered_map<Vertex*, pair<int, int>> vertexDictionary;
 
 	//The vertices will be used for max flow and be computed for perfect matching
 	Vertex *source;
 	Vertex *sink;
+
+
 
 	void addNeighbors()
 	{
@@ -188,79 +192,79 @@ private:
 		{
 			pair<int, int> up, down, left, right;
 			//Set up coordinates
-			up.first = vertexDictionary.at(i.second).first - 1;
-			up.second = vertexDictionary.at(i.second).second;
+			up.first = vertexDictionary.at(i).first - 1;
+			up.second = vertexDictionary.at(i).second;
 			//Set down coordinates
-			down.first = vertexDictionary.at(i.second).first + 1;
-			down.second = vertexDictionary.at(i.second).second;
+			down.first = vertexDictionary.at(i).first + 1;
+			down.second = vertexDictionary.at(i).second;
 			//Set left coordinates
-			left.first = vertexDictionary.at(i.second).first;
-			left.second = vertexDictionary.at(i.second).second - 1;
+			left.first = vertexDictionary.at(i).first;
+			left.second = vertexDictionary.at(i).second - 1;
 			//Set right coordinates
-			right.first = vertexDictionary.at(i.second).first;
-			right.second = vertexDictionary.at(i.second).second + 1;
+			right.first = vertexDictionary.at(i).first;
+			right.second = vertexDictionary.at(i).second + 1;
 
 			//Step 1: Try to search for a neighbor up
-			try
+			for (auto k : redCheckers)
 			{
-				Vertex* neighbor = redCheckers.at(key(up.first, up.second));
-				i.second->neighs.insert(neighbor);
-				i.second->weights[neighbor] = 1;
-			}
-			catch (out_of_range oor)
-			{
-				dummy = "";
-			}
-			//Step 2: Try to search for a neighbor down
-			try
-			{
-				Vertex* neighbor = redCheckers.at(key(down.first, down.second));
-				i.second->neighs.insert(neighbor);
-				i.second->weights[neighbor] = 1;
-			}
-			catch (out_of_range oor1)
-			{
-				dummy = "";
-			}
-			//Step 3: Try to search for a neighbor to the left
-			try
-			{
-				Vertex* neighbor = redCheckers.at(key(left.first, left.second));
-				i.second->neighs.insert(neighbor);
-				i.second->weights[neighbor] = 1;
-			}
-			catch (out_of_range oor2)
-			{
-				dummy = "";
-			}
-			//Step 4: Try to search for a neighbor to the right
-			try
-			{
-				Vertex* neighbor = redCheckers.at(key(right.first, right.second));
-				i.second->neighs.insert(neighbor);
-				i.second->weights[neighbor] = 1;
-			}
-			catch (out_of_range oor3)
-			{
-				dummy = "";
+				if (vertexDictionary.at(k) == up)
+				{
+					i->neighs.insert(k);
+					i->weights[k] = 1;
+				}
+				else if (vertexDictionary.at(k) == down)
+				{
+					i->neighs.insert(k);
+					i->weights[k] = 1;
+				}
+				else if (vertexDictionary.at(k) == left)
+				{
+					i->neighs.insert(k);
+					i->weights[k] = 1;
+				}
+				else if (vertexDictionary.at(k) == right)
+				{
+					i->neighs.insert(k);
+					i->weights[k] = 1;
+				}
 			}
 		}
-
-		
-		for (auto x : blackCheckers)
-		{
-			source->neighs.insert(x); //I have the right idea but I cant get the right syntax for
-		}												//getting the starting and ending node to do max_flow
-
-		for (auto y : redCheckers)
-		{
-			redCheckers[y]->neighs.insert(sink);
-		}
-
-
 	}
 
+	//This function connects the source to all the blac checkers
+	void setSource()
+	{
+		for (auto i : blackCheckers)
+		{
+			source->neighs.insert(i);
+			//Sets the max flow to 1
+			source->weights[i] = 1;
+		}
+		totalCheckers.insert(source);
+	}
+
+	//This function connects all the red checkers to the sink
+	void setSink()
+	{
+		for (auto i : redCheckers)
+		{
+			i->neighs.insert(sink);
+			//Sets the max flow to 1
+			i->weights[sink] = 1;
+		}
+		totalCheckers.insert(sink);
+	}
+
+
 public:
+
+	//Default constructor
+	BiPartGraph()
+	{
+		source = new Vertex();
+		sink = new Vertex();
+		numVertices = 0;
+	}
 
 	//This function returns false if the two sets do not have the same number of elements
 	bool isValid()
@@ -291,7 +295,8 @@ public:
 				pair<int, int> bPair;
 				bPair.first = row;
 				bPair.second = column;
-				blackCheckers[key(row, column)] = baby;
+				blackCheckers.insert(baby);
+				totalCheckers.insert(baby);
 				vertexDictionary[baby] = bPair;
 				column++;
 			}
@@ -301,12 +306,15 @@ public:
 				pair<int, int> bPair;
 				bPair.first = row;
 				bPair.second = column;
-				redCheckers[key(row, column)] = baby;
+				redCheckers.insert(baby);
+				totalCheckers.insert(baby);
 				vertexDictionary[baby] = bPair;
 				column++;
 			}
 		}
 		addNeighbors();
+		setSource();
+		setSink();
 	}
 	Vertex* GetSource()
 	{
@@ -317,6 +325,52 @@ public:
 		return sink;
 	}
 
+	int getFlow()
+	{
+		return max_flow(source, sink, totalCheckers);
+	}
+
+	int getB()
+	{
+		int counter = 0;
+		for (auto i : blackCheckers)
+		{
+			counter++;
+		}
+		return counter;
+	}
+
+	///Helper method to display variables
+	void displayFlow()
+	{
+		int counter = 1;
+
+		cout << "Source" << endl;
+		cout << "Neighbors: ";
+		for (auto x : source->neighs)
+			cout << vertexDictionary[x].first << "," << vertexDictionary[x].second << " :: ";
+		cout << endl;
+
+		for (auto i : vertexDictionary)
+		{
+			cout << counter << ": " << i.second.first << "," << i.second.second << endl;
+			cout << "Neighbors: ";
+			for (auto k : i.first->neighs)
+			{
+				cout << vertexDictionary[k].first << "," << vertexDictionary[k].second << " :: ";
+			}
+			counter++;
+			cout << endl;
+		}
+
+		cout << "Sink" << endl;
+		cout << "Neighbors: ";
+		for (auto y : sink->neighs)
+			cout << vertexDictionary[y].first << "," << vertexDictionary[y].second << " :: ";
+		cout << endl;
+
+		system("pause");
+	}
 };
 
 bool has_tiling(string floor)
@@ -324,6 +378,7 @@ bool has_tiling(string floor)
 	string modFloor = "";
 	int row = 0;
 	int column = 0;
+	int flow, numB;
 	bool firstElmnt = false;
 	bool startsEven;
 
@@ -403,17 +458,18 @@ bool has_tiling(string floor)
 	Vertex *t = CheckerBoard.GetSink();
 
 	//max flow
-
-
+	flow = CheckerBoard.getFlow();
+	numB = CheckerBoard.getB();
 
 	//augmented path
-
-	
-
 	//cout << modFloor << endl;
-	//system("pause");
+	//CheckerBoard.displayFlow();
+	
+	if (flow == numB)
+		return true;
+	else
+		return false;
 }
 
 
-
-
+#endif // !BIPARTGRAPH_H

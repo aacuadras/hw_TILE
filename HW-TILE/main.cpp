@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <vector>
+#include<time.h>
 #include "tiling.h"
 
 using namespace std;
@@ -14,9 +15,10 @@ inline void _test(const char* expression, const char* file, int line)
 }
 #define test(EXPRESSION) ((EXPRESSION) ? (void)0 : _test(#EXPRESSION, __FILE__, __LINE__))
 
-/*
+
 int main()
 {
+	clock_t t_clock = clock();
 	// Setup
         srand(2018 + 'f');
 	string floor;
@@ -316,7 +318,8 @@ int main()
 
 
 	cout << "Assignment complete." << endl;
+	printf("Time taken: %.2fs\n", (double)(clock() - t_clock) / CLOCKS_PER_SEC);
+	system("pause");
 }
 
-*/
 
